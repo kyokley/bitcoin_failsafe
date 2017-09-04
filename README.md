@@ -12,9 +12,7 @@ My goal is to provide a method of creating a group of linked wallets in such a w
 ### Generation
 Let's say Alice, Bob, and Carol would like to create linked wallets. The following would take place on an air-gapped machine with all 3 parties in attendance. Begin by running failsafe with no arguments which starts account creation in interactive mode.
 
-```
-failsafe
-```
+![Generate](/../screenshots/screenshots/generate.gif?raw=true)
 
 The application will prompt for the number of accounts to create as well as the number of shards required for consensus. A new hierarchical deterministic wallet (HD wallet) will be created. New accounts for Alice, Bob, and Carol will be generated as children on this wallet. Once the child wallets have been created, the master wallet is serialized, split into shards using Shamir's secret sharing algorithm, and finally, the master is destroyed.
 
