@@ -1,3 +1,4 @@
 secretsharing
 bitmerchant
 blessings
+versioneer
