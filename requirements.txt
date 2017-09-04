@@ -3,3 +3,4 @@ bitmerchant
 blessings
 versioneer
 docopt
+qrcode-terminal

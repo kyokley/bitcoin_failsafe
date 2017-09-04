@@ -27,20 +27,20 @@ VERSION = get_versions()['version']
 term = Terminal()
 
 def main():
-    arguments = docopt(__doc__, version=get_versions()['version'])
-    if arguments['--version']:
-        print(VERSION)
-    if not arguments['--recover']:
-        generate(number_of_accounts=int(arguments['ACCOUNTS'] or 0),
-                 key_threshold=int(arguments['THRESHOLD'] or 0))
-    else:
-        recover()
-
-
-if __name__ == '__main__':
     try:
-        main()
+        arguments = docopt(__doc__, version=get_versions()['version'])
+        if arguments['--version']:
+            print(VERSION)
+        if not arguments['--recover']:
+            generate(number_of_accounts=int(arguments['ACCOUNTS'] or 0),
+                     key_threshold=int(arguments['THRESHOLD'] or 0))
+        else:
+            recover()
     except KeyboardInterrupt:
         print(term.red)
         print('Aborted')
         print(term.normal)
+
+
+if __name__ == '__main__':
+    main()

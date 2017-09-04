@@ -3,6 +3,8 @@ from __future__ import print_function
 import os
 import tempfile
 import json
+import shutil
+import qrcode
 
 from secretsharing import BitcoinToB58SecretSharer
 
@@ -13,7 +15,6 @@ term = Terminal()
 
 def generate(number_of_accounts=None,
              key_threshold=None):
-    directory = tempfile.mkdtemp()
     print(term.clear)
 
     if not number_of_accounts:
@@ -28,7 +29,6 @@ def generate(number_of_accounts=None,
     shares = BitcoinToB58SecretSharer.split_secret(serialized_wallet,
                                                    key_threshold,
                                                    number_of_accounts)
-    print('Temp dir at {}'.format(directory))
 
     for i in range(number_of_accounts):
         print(term.clear)
@@ -51,21 +51,34 @@ def generate(number_of_accounts=None,
                 }
         json_data = json.dumps(data)
 
+        directory = tempfile.mkdtemp()
         filename = os.path.join(directory, 'child{}.json'.format(i + 1))
         with open(filename, 'w+b') as f:
             f.write(json_data)
 
+        shard_img = qrcode.make(data['master_shard'])
+        shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(i + 1))
+        shard_img.save(shard_img_filename)
+
+        account_img = qrcode.make(data['account'])
+        account_img_filename = os.path.join(directory, 'child{}_account.png'.format(i + 1))
+        account_img.save(account_img_filename)
+
         print(term.blue)
         print('Data has been written to {}'.format(filename))
         print()
-        print(term.red)
-        print('Take the time to copy the file before continuing')
-        print('After leaving this screen, the file will be destroyed')
         print(term.normal)
+        print('Take the time to copy the file before continuing')
+        print('After leaving this screen, the files will be destroyed')
+        print(term.red + term.bold)
+        print('BE EXTREMELY CAREFUL WITH THE ACCOUNT AND SHARD INFORMATION')
+        print('Especially when handling data in the QR form. A picture of the QR code is enough to steal your entire account '
+              'and potentially compromise the other linked accounts')
         print()
+        print(term.normal)
         raw_input('Press enter to continue when ready')
 
-        os.remove(filename)
+        shutil.rmtree(directory)
 
     print(term.clear)
     print(term.normal)
