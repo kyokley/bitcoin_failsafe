@@ -8,6 +8,17 @@ These methods make the account more secure but also make it highly unlikely your
 
 My goal is to provide a method of creating a group of linked wallets in such a way that, in case of emergency, any wallet would be accessible by a consensus of the other accounts. Obviously, there is a tradeoff in security but, with the help of the other participants, you gain the ability to recover in case of the unexpected.
 
+## Installation
+This package is not currently available on PYPI so, for the time being, it's easiest to just clone the repo and install from there.
+
+Assuming you've created a virtualenv and activated it in one of the usual ways, do the following to install the package.
+
+```
+$ git clone https://github.com/kyokley/bitcoin_failsafe.git
+$ cd bitcoin_failsafe
+$ pip install .
+```
+
 ## Example
 ### Generation
 Let's say Alice, Bob, and Carol would like to create linked wallets. The following would take place on an air-gapped machine with all 3 parties in attendance. Begin by running failsafe with no arguments which starts account creation in interactive mode.
