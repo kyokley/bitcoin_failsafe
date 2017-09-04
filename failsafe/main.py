@@ -1,71 +1,46 @@
+"""Bitcoin Failsafe
+
+Usage:
+    failsafe [-a ACCOUNTS] [-t THRESHOLD]
+    failsafe (-r | --recover)
+    failsafe (-h | --help)
+    failsafe --version
+
+Options:
+    -r --recover    Recover a user account from master shards
+    -a --accounts   Total number of accounts to be created
+    -t --threshold  Number of master shards required to regenerate a user's key
+    -h --help       Show this screen.
+    --version       Show version
+"""
 from __future__ import print_function
 
-import os
-import tempfile
-import json
+from docopt import docopt
 
-from secretsharing import BitcoinToB58SecretSharer
+from ._version import get_versions
 
 from blessings import Terminal
-from bitmerchant.wallet import Wallet
+from .failsafe import generate, recover
+
+VERSION = get_versions()['version']
 
 term = Terminal()
 
 def main():
-    directory = tempfile.mkdtemp()
-    print(term.clear)
-    number_of_accounts = int(raw_input('Enter how many accounts to create: '))
-    key_threshold = int(raw_input('Enter key threshold: '))
-    print()
-
-    master_wallet = Wallet.new_random_wallet()
-    serialized_wallet = master_wallet.serialize_b58().encode()
-    shares = BitcoinToB58SecretSharer.split_secret(serialized_wallet,
-                                                   key_threshold,
-                                                   number_of_accounts)
-    print('Temp dir at {}'.format(directory))
-
-    for i in range(number_of_accounts):
-        print(term.clear)
-        print(term.red)
-        print('The following screen is meant for user {index} (of {total})'.format(index=i + 1,
-                                                                                   total=number_of_accounts))
-        print('Do not press continue if you are not user {index}'.format(index=i + 1))
-        print(term.normal)
-        print()
-
-        raw_input('Press enter to continue when ready')
-        print(term.clear)
-
-
-        child = master_wallet.get_child(i)
-        data = {'child': '{index} of {total}'.format(index=i + 1,
-                                                     total=number_of_accounts),
-                'master_shard': shares[i],
-                'account': child.serialize_b58(),
-                }
-        json_data = json.dumps(data)
-
-        filename = os.path.join(directory, 'child{}.txt'.format(i))
-        with open(filename, 'w+b') as f:
-            f.write(json_data)
-
-        print(term.blue)
-        print('Data has been written to {}'.format(filename))
-        print()
-        print(term.red)
-        print('Take the time to copy the file before continuing')
-        print('After leaving this screen, the file will be destroyed')
-        print(term.normal)
-        print()
-        raw_input('Press enter to continue when ready')
-
-        os.remove(filename)
-
-    print(term.clear)
-    print(term.normal)
-    print('All done')
+    arguments = docopt(__doc__, version=get_versions()['version'])
+    if arguments['--version']:
+        print(VERSION)
+    if not arguments['--recover']:
+        generate(number_of_accounts=int(arguments['ACCOUNTS'] or 0),
+                 key_threshold=int(arguments['THRESHOLD'] or 0))
+    else:
+        recover()
 
 
 if __name__ == '__main__':
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print(term.red)
+        print('Aborted')
+        print(term.normal)

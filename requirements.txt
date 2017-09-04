@@ -2,3 +2,4 @@ secretsharing
 bitmerchant
 blessings
 versioneer
+docopt
