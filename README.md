@@ -49,7 +49,7 @@ Carol:
 }
 ```
 
-The "account" is a base58 serialized private key that can be used to generate additional accounts if necessary. The "mater_shard" is a piece of the master wallet that can be used to regenerate the master key given a quorum of other shards. "child" shows the index of the master wallet that was used to create the "account".
+The "account" is a base58 serialized private key that can be used to generate additional accounts if necessary. The "master_shard" is a piece of the master wallet that can be used to regenerate the master key given a quorum of other shards. "child" shows the index of the master wallet that was used to create the "account".
 
 It is critical that Alice, Bob, and Carol not share any of this information with anyone, including each other. These accounts become the offline storage for each participant.
 
