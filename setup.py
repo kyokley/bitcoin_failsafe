@@ -85,7 +85,7 @@ setup(
     # py_modules=['mypackage'],
 
     entry_points={
-        'console_scripts': ['failsafe=failsafe:main'],
+        'console_scripts': ['failsafe=failsafe.main:main'],
     },
     install_requires=REQUIRED,
     include_package_data=True,
