@@ -113,3 +113,41 @@ def recover():
     print('Key for user #{}:'.format(user_index + 1))
     print(child_wallet.serialize_b58())
 
+def rekey():
+    # TODO: I need to figure out how this functionality should work
+
+    raise NotImplemented
+    shards = []
+
+    print(term.clear)
+
+    print('Starting on the next screen, each user will be asked to input their piece of the master key.')
+    raw_input('Press enter to continue')
+
+    print(term.clear)
+    print('Attempting to recover master wallet')
+    print('Key progress: 0')
+    print()
+    piece = raw_input('Enter first shard: ')
+    initial_threshold, shard = piece.split('-', 1)
+    initial_threshold = int(initial_threshold)
+    shards.append(shard)
+
+    for i in range(1, initial_threshold):
+        print(term.clear)
+        print('The next screen is for the next user.')
+        raw_input('Press enter to continue')
+
+        print(term.clear)
+        print('Attempting to recover master wallet')
+        print('Key progress: {}'.format(i))
+        print()
+        piece = raw_input('Enter shard: ')
+        threshold, shard = piece.split('-', 1)
+        shards.append(shard)
+
+        if initial_threshold != int(threshold):
+            raise Exception('Shard thresholds do not match. An invalid shard has been provided.')
+
+    master_key = BitcoinToB58SecretSharer.recover_secret(shards)
+    master_wallet = Wallet.deserialize(master_key)
