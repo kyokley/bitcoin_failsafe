@@ -51,7 +51,7 @@ def generate(number_of_accounts=None,
                 }
         json_data = json.dumps(data)
 
-        filename = os.path.join(directory, 'child{}.txt'.format(i + 1))
+        filename = os.path.join(directory, 'child{}.json'.format(i + 1))
         with open(filename, 'w+b') as f:
             f.write(json_data)
 
@@ -109,6 +109,7 @@ def recover():
     master_wallet = Wallet.deserialize(master_key)
     child_wallet = master_wallet.get_child(user_index)
 
+    # TODO: Print this to a temp file
     print(term.clear)
     print('Key for user #{}:'.format(user_index + 1))
     print(child_wallet.serialize_b58())
