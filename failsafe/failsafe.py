@@ -5,6 +5,7 @@ import tempfile
 import json
 import shutil
 import qrcode
+import qrcode_terminal
 
 from secretsharing import BitcoinToB58SecretSharer
 
@@ -22,7 +23,6 @@ def generate(number_of_accounts=None,
 
     if not key_threshold:
         key_threshold = int(raw_input('Enter key threshold: '))
-    print()
 
     master_wallet = Wallet.new_random_wallet()
     serialized_wallet = master_wallet.serialize_b58().encode()
@@ -31,13 +31,11 @@ def generate(number_of_accounts=None,
                                                    number_of_accounts)
 
     for i in range(number_of_accounts):
-        print(term.clear)
-        print(term.red)
+        print(term.clear + term.red)
         print('The following screen is meant for user {index} (of {total})'.format(index=i + 1,
                                                                                    total=number_of_accounts))
         print('Do not press continue if you are not user {index}'.format(index=i + 1))
         print(term.normal)
-        print()
 
         raw_input('Press enter to continue when ready')
         print(term.clear)
@@ -66,7 +64,6 @@ def generate(number_of_accounts=None,
 
         print(term.blue)
         print('Data has been written to {}'.format(filename))
-        print()
         print(term.normal)
         print('Take the time to copy the file before continuing')
         print('After leaving this screen, the files will be destroyed')
@@ -74,14 +71,21 @@ def generate(number_of_accounts=None,
         print('BE EXTREMELY CAREFUL WITH THE ACCOUNT AND SHARD INFORMATION')
         print('Especially when handling data in the QR form. A picture of the QR code is enough to steal your entire account '
               'and potentially compromise the other linked accounts')
-        print()
         print(term.normal)
+        print('Your public key is being displayed here for your convenience')
+        print()
+        pubkey = child.serialize_b58(private=False)
+        print(pubkey)
+        print()
+        qrcode_terminal.draw(pubkey)
+        print()
+        print(child.public_key.to_address())
+        print()
         raw_input('Press enter to continue when ready')
 
         shutil.rmtree(directory)
 
-    print(term.clear)
-    print(term.normal)
+    print(term.clear + term.normal)
     print('All done')
 
 def recover():
@@ -120,23 +124,21 @@ def recover():
 
     master_key = BitcoinToB58SecretSharer.recover_secret(shards)
     master_wallet = Wallet.deserialize(master_key)
-    child_wallet = master_wallet.get_child(user_index)
+    child = master_wallet.get_child(user_index)
 
     directory = tempfile.mkdtemp()
     filename = os.path.join(directory, 'child{}.json'.format(user_index + 1))
     with open(filename, 'w+b') as f:
-        f.write(child_wallet.serialize_b58())
+        f.write(child.serialize_b58())
 
-    img = qrcode.make(child_wallet.serialize_b58())
+    img = qrcode.make(child.serialize_b58())
     qr_filename = os.path.join(directory, 'child{}_account.png'.format(user_index + 1))
     img.save(qr_filename)
 
-    print(term.clear)
-    print(term.blue)
+    print(term.clear + term.blue)
     print('Key for user #{}:'.format(user_index + 1))
     print('Data has been written to {}'.format(filename))
-    print('QR code written to {}'.format(qr_filename))
-    print()
+    print('Private QR code written to {}'.format(qr_filename))
     print(term.normal)
     print('Take the time to copy the file before continuing')
     print('After leaving this screen, the files will be destroyed')
@@ -144,8 +146,16 @@ def recover():
     print('BE EXTREMELY CAREFUL WITH THE ACCOUNT AND SHARD INFORMATION')
     print('Especially when handling data in the QR form. A picture of the QR code is enough to steal your entire account '
           'and potentially compromise the other linked accounts')
-    print()
     print(term.normal)
+    print('Your public key is being displayed here for your convenience')
+    print()
+    pubkey = child.serialize_b58(private=False)
+    print(pubkey)
+    print()
+    qrcode_terminal.draw(pubkey)
+    print()
+    print(child.public_key.to_address())
+    print()
     raw_input('Press enter to continue when ready')
 
     shutil.rmtree(directory)
