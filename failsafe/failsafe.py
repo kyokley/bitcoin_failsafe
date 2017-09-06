@@ -128,12 +128,14 @@ def recover():
         f.write(child_wallet.serialize_b58())
 
     img = qrcode.make(child_wallet.serialize_b58())
-    filename = os.path.join(directory, 'child{}_account.png'.format(user_index + 1))
-    img.save(filename)
+    qr_filename = os.path.join(directory, 'child{}_account.png'.format(user_index + 1))
+    img.save(qr_filename)
 
+    print(term.clear)
     print(term.blue)
     print('Key for user #{}:'.format(user_index + 1))
     print('Data has been written to {}'.format(filename))
+    print('QR code written to {}'.format(qr_filename))
     print()
     print(term.normal)
     print('Take the time to copy the file before continuing')
