@@ -41,7 +41,7 @@ def generate(number_of_accounts=None,
         print(term.clear)
 
 
-        child = master_wallet.get_child(i)
+        child = master_wallet.get_child(i, is_prime=True)
         data = {'child': '{index} of {total}'.format(index=i + 1,
                                                      total=number_of_accounts),
                 'master_shard': '{}-{}'.format(key_threshold, shares[i]),
@@ -74,7 +74,7 @@ def generate(number_of_accounts=None,
         print(term.normal)
         print('Your account address is being displayed here for your convenience')
         print()
-        address = child.public_key.to_address()
+        address = child.to_address()
         print(address)
         print()
         qrcode_terminal.draw(address)
@@ -122,7 +122,7 @@ def recover():
 
     master_key = BitcoinToB58SecretSharer.recover_secret(shards)
     master_wallet = Wallet.deserialize(master_key)
-    child = master_wallet.get_child(user_index)
+    child = master_wallet.get_child(user_index, is_prime=True)
 
     directory = tempfile.mkdtemp()
     filename = os.path.join(directory, 'child{}.json'.format(user_index + 1))
@@ -147,7 +147,7 @@ def recover():
     print(term.normal)
     print('Your public key is being displayed here for your convenience')
     print()
-    address = child.public_key.to_address()
+    address = child.to_address()
     print(address)
     print()
     qrcode_terminal.draw(address)
