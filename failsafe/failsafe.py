@@ -41,49 +41,12 @@ def generate(number_of_accounts=None,
         print(term.clear)
 
 
-        child = master_wallet.get_child(i, is_prime=True)
         data = {'child': '{index} of {total}'.format(index=i + 1,
                                                      total=number_of_accounts),
                 'master_shard': '{}-{}'.format(key_threshold, shares[i]),
-                'account': child.serialize_b58(),
                 }
-        json_data = json.dumps(data)
+        _generateKey(master_wallet, i, extra_data=data)
 
-        directory = tempfile.mkdtemp()
-        filename = os.path.join(directory, 'child{}.json'.format(i + 1))
-        with open(filename, 'w+b') as f:
-            f.write(json_data)
-
-        shard_img = qrcode.make(data['master_shard'])
-        shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(i + 1))
-        shard_img.save(shard_img_filename)
-
-        account_img = qrcode.make(data['account'])
-        account_img_filename = os.path.join(directory, 'child{}_account.png'.format(i + 1))
-        account_img.save(account_img_filename)
-
-        print(term.blue)
-        print('Data has been written to {}'.format(filename))
-        print(term.normal)
-        print('Take the time to copy the file before continuing')
-        print('After leaving this screen, the files will be destroyed')
-        print(term.red + term.bold)
-        print('BE EXTREMELY CAREFUL WITH THE ACCOUNT AND SHARD INFORMATION')
-        print('Especially when handling data in the QR form. A picture of the QR code is enough to steal your entire account '
-              'and potentially compromise the other linked accounts')
-        print(term.normal)
-        print('Your account address is being displayed here for your convenience')
-        print()
-        address = child.to_address()
-        print(address)
-        print()
-        qrcode_terminal.draw(address)
-        print()
-        raw_input('Press enter to continue when ready')
-
-        shutil.rmtree(directory)
-
-    print(term.clear + term.normal)
     print('All done')
 
 def recover():
@@ -122,19 +85,33 @@ def recover():
 
     master_key = BitcoinToB58SecretSharer.recover_secret(shards)
     master_wallet = Wallet.deserialize(master_key)
+
+    _generateKey(master_wallet, user_index)
+
+def _generateKey(master_wallet, user_index, extra_data=None):
+    directory = tempfile.mkdtemp()
     child = master_wallet.get_child(user_index, is_prime=True)
 
-    directory = tempfile.mkdtemp()
+    data = {'account': child.export_to_wif()}
+    if extra_data:
+        data.update(extra_data)
+    json_data = json.dumps(data)
+
     filename = os.path.join(directory, 'child{}.json'.format(user_index + 1))
     with open(filename, 'w+b') as f:
-        f.write(child.serialize_b58())
+        f.write(json_data)
 
-    img = qrcode.make(child.serialize_b58())
+    img = qrcode.make(data['account'])
     qr_filename = os.path.join(directory, 'child{}_account.png'.format(user_index + 1))
     img.save(qr_filename)
 
+    if 'master_shard' in data:
+        shard_img = qrcode.make(data['master_shard'])
+        shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(user_index + 1))
+        shard_img.save(shard_img_filename)
+
     print(term.clear + term.blue)
-    print('Key for user #{}:'.format(user_index + 1))
+    print('Key for user {}:'.format(user_index + 1))
     print('Data has been written to {}'.format(filename))
     print('Private QR code written to {}'.format(qr_filename))
     print(term.normal)
@@ -145,7 +122,7 @@ def recover():
     print('Especially when handling data in the QR form. A picture of the QR code is enough to steal your entire account '
           'and potentially compromise the other linked accounts')
     print(term.normal)
-    print('Your public key is being displayed here for your convenience')
+    print('Your account address is being displayed here for your convenience')
     print()
     address = child.to_address()
     print(address)
