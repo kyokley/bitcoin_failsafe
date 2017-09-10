@@ -114,6 +114,8 @@ def _generateKey(master_wallet, user_index, extra_data=None):
     print('Key for user {}:'.format(user_index + 1))
     print('Data has been written to {}'.format(filename))
     print('Private QR code written to {}'.format(qr_filename))
+    if 'master_shard' in data:
+        print('Shard QR code written to {}'.format(shard_img_filename))
     print(term.normal)
     print('Take the time to copy the file before continuing')
     print('After leaving this screen, the files will be destroyed')
