@@ -1,7 +1,7 @@
 """Bitcoin Failsafe
 
 Usage:
-    failsafe [-a ACCOUNTS] [-t THRESHOLD]
+    failsafe [-a ACCOUNTS] [-t THRESHOLD] [-u USERS]
     failsafe (-r | --recover)
     failsafe (-h | --help)
     failsafe --version
@@ -32,8 +32,8 @@ def main():
         if arguments['--version']:
             print(VERSION)
         if not arguments['--recover']:
-            generate(number_of_accounts=int(arguments['ACCOUNTS'] or 0),
-                     key_threshold=int(arguments['THRESHOLD'] or 0))
+            generate(number_of_users=int(arguments['ACCOUNTS']) if arguments['ACCOUNTS'] else None,
+                     key_threshold=int(arguments['THRESHOLD']) if arguments['THRESHOLD'] else None)
         else:
             recover()
     except KeyboardInterrupt:
