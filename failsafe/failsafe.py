@@ -131,7 +131,7 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
 
         data['wif_accounts'].append(child.export_to_wif())
 
-    filename = os.path.join(directory, 'child{}.priv.json'.format(user_index + 1))
+    filename = os.path.join(directory, 'user_info.priv.json'.format(user_index + 1))
     json_data = json.dumps(data)
     with open(filename, 'w+b') as f:
         f.write(json_data)
