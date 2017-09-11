@@ -141,7 +141,6 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
         shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(user_index + 1))
         shard_img.save(shard_img_filename)
 
-    _print(term.clear + term.blue)
     _print(('Key for user {user_index}:\n'
             'Data has been written to {filename}\n'
             'QR codes have been written for {number_of_accounts} account(s)').format(number_of_accounts=number_of_accounts,
