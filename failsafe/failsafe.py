@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import os
 import tempfile
 import json
@@ -12,25 +10,27 @@ from secretsharing import BitcoinToB58SecretSharer
 from blessings import Terminal
 from bitmerchant.wallet import Wallet
 
+from .utils import _get_input, _print
+
 term = Terminal()
 
 def generate(number_of_users=None,
              number_of_accounts=None,
              key_threshold=None,
              extra_entropy=None):
-    print(term.clear)
+    _print(term.clear)
 
     if number_of_users is None:
-        number_of_users = int(raw_input('Enter number of users participating [1]: ') or 1)
+        number_of_users = _get_input('Enter number of users participating [1]: ', input_type=int, default=1)
 
     if number_of_users > 1 and not key_threshold:
-        key_threshold = int(raw_input('Enter key threshold [1, {}]: '.format(number_of_users)) or number_of_users)
+        key_threshold = _get_input('Enter key threshold [1, {}]: '.format(number_of_users), input_type=int, default=number_of_users)
 
     if number_of_accounts is None:
-        number_of_accounts = int(raw_input('Enter number of accounts to be created per user [1]: ') or 1)
+        number_of_accounts = _get_input('Enter number of accounts to be created per user [1]: ', input_type=int, default=1)
 
     if not extra_entropy:
-        extra_entropy = raw_input('Enter additional entropy [None]: ') or ''
+        extra_entropy = _get_input('Enter additional entropy [None]: ')
 
     master_wallet = Wallet.new_random_wallet(extra_entropy)
     serialized_wallet = master_wallet.serialize_b58()
@@ -43,14 +43,13 @@ def generate(number_of_users=None,
         shares = None
 
     for user_index in range(number_of_users):
-        print(term.clear + term.red)
-        print('The following screen is meant for user {index} (of {total})'.format(index=user_index + 1,
-                                                                                   total=number_of_users))
-        print('Do not press continue if you are not user {index}'.format(index=user_index + 1))
-        print(term.normal)
+        _print(('The following screen is meant for user {index} (of {total})'
+                'Do not press continue if you are not user {index}').format(index=user_index + 1,
+                                                                            total=number_of_users),
+               formatters=[term.clear, term.red])
 
-        raw_input('Press enter to continue when ready')
-        print(term.clear)
+        _get_input('Press enter to continue when ready')
+        _print(term.clear)
 
         if number_of_users > 1:
             data = {'child': '{index} of {total}'.format(index=user_index + 1,
@@ -61,37 +60,39 @@ def generate(number_of_users=None,
             data = {}
         _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=data)
 
-    print('All done')
+    _print('All done')
 
 def recover():
     shards = []
 
-    user_index = int(raw_input("Enter the index of the user who's key should be regenerated: ")) - 1
-    number_of_accounts = int(raw_input('Enter number of accounts to be created per user [1]: ') or '1')
-    print(term.clear)
+    user_index = _get_input("Enter the index of the user who's key should be regenerated: ", input_type=int) - 1
+    number_of_accounts = _get_input('Enter number of accounts to be created per user [1]: ',
+                                    input_type=int,
+                                    default=1)
+    _print(term.clear)
 
-    print('Starting on the next screen, each user will be asked to input their piece of the master key.')
-    raw_input('Press enter to continue')
+    _print('Starting on the next screen, each user will be asked to input their piece of the master key.')
+    _get_input('Press enter to continue')
 
-    print(term.clear)
-    print('Attempting to recover keys for user #{}'.format(user_index + 1))
-    print('Key progress: 0')
-    print()
-    piece = raw_input('Enter first shard: ')
+    _print(term.clear)
+    _print('Attempting to recover keys for user #{}'.format(user_index + 1))
+    _print('Key progress: 0')
+    _print()
+    piece = _get_input('Enter first shard: ')
     initial_threshold, shard = piece.split('-', 1)
     initial_threshold = int(initial_threshold)
     shards.append(shard)
 
     for i in range(1, initial_threshold):
-        print(term.clear)
-        print('The next screen is for the next user.')
-        raw_input('Press enter to continue')
+        _print(term.clear)
+        _print('The next screen is for the next user.')
+        _get_input('Press enter to continue')
 
-        print(term.clear)
-        print('Attempting to recover keys for user #{}'.format(user_index + 1))
-        print('Key progress: {}'.format(i))
-        print()
-        piece = raw_input('Enter shard: ')
+        _print(term.clear)
+        _print('Attempting to recover keys for user #{}'.format(user_index + 1))
+        _print('Key progress: {}'.format(i))
+        _print()
+        piece = _get_input('Enter shard: ')
         threshold, shard = piece.split('-', 1)
         shards.append(shard)
 
@@ -141,29 +142,31 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
         shard_img.save(shard_img_filename)
 
     print(term.clear + term.blue)
-    print('Key for user {}:'.format(user_index + 1))
-    print('Data has been written to {}'.format(filename))
-    print('QR codes have been written for {} account(s)'.format(number_of_accounts))
-    print(term.normal)
-    print('Take the time to copy these files before continuing')
-    print('After leaving this screen, the files will be destroyed')
-    print(term.red + term.bold)
-    print('BE EXTREMELY CAREFUL WITH THE ACCOUNT AND SHARD INFORMATION')
-    print('Especially when handling data in the QR form. A picture of the QR code may be enough to steal your entire account '
-          'and potentially compromise the other linked accounts')
-    print(term.normal)
+    _print(('Key for user {user_index}:'
+            'Data has been written to {filename}'
+            'QR codes have been written for {number_of_accounts} account(s)').format(number_of_accounts=number_of_accounts,
+                                                                                     filename=filename,
+                                                                                     user_index=user_index + 1),
+            formatters=[term.clear, term.blue])
+    _print('Take the time to copy these files before continuing'
+           'After leaving this screen, the files will be destroyed')
+    _print('BE EXTREMELY CAREFUL WITH THE ACCOUNT AND SHARD INFORMATION'
+           'Especially when handling data in the QR form. A picture of the QR code may be enough to steal your entire account '
+           'and potentially compromise the other linked accounts',
+           formatters=[term.red, term.bold])
+
     if first:
-        print('Your first account address is being displayed here for your convenience')
-        print()
+        _print('Your first account address is being displayed here for your convenience')
+        _print()
         address = first.to_address()
-        print(address)
-        print()
+        _print(address)
+        _print()
         qrcode_terminal.draw(address)
-        print()
-    raw_input('Press enter to continue when ready')
+        _print()
+    _get_input('Press enter to continue when ready')
 
     shutil.rmtree(directory)
-    print(term.clear)
+    _print(term.clear)
 
 def rekey():
     # TODO: I need to figure out how this functionality should work
@@ -174,13 +177,13 @@ def rekey():
     print(term.clear)
 
     print('Starting on the next screen, each user will be asked to input their piece of the master key.')
-    raw_input('Press enter to continue')
+    _get_input('Press enter to continue')
 
     print(term.clear)
     print('Attempting to recover master wallet')
     print('Key progress: 0')
     print()
-    piece = raw_input('Enter first shard: ')
+    piece = _get_input('Enter first shard: ')
     initial_threshold, shard = piece.split('-', 1)
     initial_threshold = int(initial_threshold)
     shards.append(shard)
@@ -188,13 +191,13 @@ def rekey():
     for i in range(1, initial_threshold):
         print(term.clear)
         print('The next screen is for the next user.')
-        raw_input('Press enter to continue')
+        _get_input('Press enter to continue')
 
         print(term.clear)
         print('Attempting to recover master wallet')
         print('Key progress: {}'.format(i))
         print()
-        piece = raw_input('Enter shard: ')
+        piece = _get_input('Enter shard: ')
         threshold, shard = piece.split('-', 1)
         shards.append(shard)
 

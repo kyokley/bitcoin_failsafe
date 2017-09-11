@@ -1,15 +1,16 @@
 """Bitcoin Failsafe
 
 Usage:
-    failsafe [-a ACCOUNTS] [-t THRESHOLD] [-u USERS]
+    failsafe [-u USERS] [-a ACCOUNTS] [-t THRESHOLD] [-e ENTROPY]
     failsafe (-r | --recover)
     failsafe (-h | --help)
     failsafe --version
 
 Options:
-    -r --recover    Recover a user account from master shards
-    -a --accounts   Total number of accounts to be created
+    -u --users      Number of users participating
+    -a --accounts   Number of accounts to be created per user
     -t --threshold  Number of master shards required to regenerate a user's key
+    -r --recover    Recover a user account from master shards
     -h --help       Show this screen.
     --version       Show version
 """
@@ -32,8 +33,9 @@ def main():
         if arguments['--version']:
             print(VERSION)
         if not arguments['--recover']:
-            generate(number_of_users=int(arguments['ACCOUNTS']) if arguments['ACCOUNTS'] else None,
-                     key_threshold=int(arguments['THRESHOLD']) if arguments['THRESHOLD'] else None)
+            generate(number_of_accounts=int(arguments['ACCOUNTS']) if arguments['ACCOUNTS'] else None,
+                     key_threshold=int(arguments['THRESHOLD']) if arguments['THRESHOLD'] else None,
+                     number_of_users=int(arguments['USERS']) if arguments['USERS'] else None)
         else:
             recover()
     except KeyboardInterrupt:
