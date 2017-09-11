@@ -43,7 +43,7 @@ def generate(number_of_users=None,
         shares = None
 
     for user_index in range(number_of_users):
-        _print(('The following screen is meant for user {index} (of {total})'
+        _print(('The following screen is meant for user {index} (of {total})\n'
                 'Do not press continue if you are not user {index}').format(index=user_index + 1,
                                                                             total=number_of_users),
                formatters=[term.clear, term.red])
@@ -75,7 +75,7 @@ def recover():
     _get_input('Press enter to continue')
 
     _print(term.clear)
-    _print('Attempting to recover keys for user #{}'.format(user_index + 1))
+    _print('Attempting to recover keys for user {}'.format(user_index + 1))
     _print('Key progress: 0')
     _print()
     piece = _get_input('Enter first shard: ')
@@ -89,7 +89,7 @@ def recover():
         _get_input('Press enter to continue')
 
         _print(term.clear)
-        _print('Attempting to recover keys for user #{}'.format(user_index + 1))
+        _print('Attempting to recover keys for user {}'.format(user_index + 1))
         _print('Key progress: {}'.format(i))
         _print()
         piece = _get_input('Enter shard: ')
@@ -141,19 +141,22 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
         shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(user_index + 1))
         shard_img.save(shard_img_filename)
 
-    print(term.clear + term.blue)
-    _print(('Key for user {user_index}:'
-            'Data has been written to {filename}'
+    _print(term.clear + term.blue)
+    _print(('Key for user {user_index}:\n'
+            'Data has been written to {filename}\n'
             'QR codes have been written for {number_of_accounts} account(s)').format(number_of_accounts=number_of_accounts,
                                                                                      filename=filename,
                                                                                      user_index=user_index + 1),
             formatters=[term.clear, term.blue])
-    _print('Take the time to copy these files before continuing'
+    _print()
+    _print('Take the time to copy these files before continuing\n'
            'After leaving this screen, the files will be destroyed')
-    _print('BE EXTREMELY CAREFUL WITH THE ACCOUNT AND SHARD INFORMATION'
-           'Especially when handling data in the QR form. A picture of the QR code may be enough to steal your entire account '
+    _print()
+    _print('BE EXTREMELY CAREFUL WITH THE ACCOUNT AND SHARD INFORMATION\n'
+           'Especially when handling data in the QR form. A picture of the QR code may be enough to steal your entire account\n'
            'and potentially compromise the other linked accounts',
            formatters=[term.red, term.bold])
+    _print()
 
     if first:
         _print('Your first account address is being displayed here for your convenience')

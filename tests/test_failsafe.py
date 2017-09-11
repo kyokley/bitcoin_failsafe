@@ -58,15 +58,15 @@ class TestGenerate(unittest.TestCase):
 
         self.mock_print.assert_has_calls(
                 [mock.call(term.clear),
-                 mock.call('The following screen is meant for user 1 (of 3)'
+                 mock.call('The following screen is meant for user 1 (of 3)\n'
                            'Do not press continue if you are not user 1',
                            formatters=[term.clear, term.red]),
                  mock.call(term.clear),
-                 mock.call('The following screen is meant for user 2 (of 3)'
+                 mock.call('The following screen is meant for user 2 (of 3)\n'
                            'Do not press continue if you are not user 2',
                            formatters=[term.clear, term.red]),
                  mock.call(term.clear),
-                 mock.call('The following screen is meant for user 3 (of 3)'
+                 mock.call('The following screen is meant for user 3 (of 3)\n'
                            'Do not press continue if you are not user 3',
                            formatters=[term.clear, term.red]),
                  mock.call(term.clear),
