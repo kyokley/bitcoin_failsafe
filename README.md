@@ -1,4 +1,4 @@
-# Bitcoin Failsafe
+# Bitcoin Failsafe [![Build Status](https://travis-ci.org/kyokley/bitcoin_failsafe.svg?branch=master)](https://travis-ci.org/kyokley/bitcoin_failsafe)
 Generate a group of linked HD wallets with a recoverable master wallet in case of emergency
 
 ## Purpose
