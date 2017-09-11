@@ -5,4 +5,4 @@ install:
     - pip install -r test_requirements.txt
 script:
     - nosetests
-    - bandit -x tests -r .
+    - bandit -x failsafe/_version.py -r failsafe
