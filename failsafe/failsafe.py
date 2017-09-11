@@ -108,8 +108,8 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
     directory = tempfile.mkdtemp()
     user_key = master_wallet.get_child(user_index, is_prime=True)
 
-    data = {'user_key': user_key.export_to_wif(),
-            'pub_priv_accounts': [],
+    data = {'user_key': user_key.serialize_b58(),
+            'wif_accounts': [],
             }
     if extra_data:
         data.update(extra_data)
@@ -129,7 +129,7 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
         qr_filename = os.path.join(directory, 'child{}.pub.png'.format(idx + 1))
         img.save(qr_filename)
 
-        data['pub_priv_accounts'].append(child.export_to_wif())
+        data['wif_accounts'].append(child.export_to_wif())
 
     filename = os.path.join(directory, 'child{}.priv.json'.format(user_index + 1))
     json_data = json.dumps(data)
