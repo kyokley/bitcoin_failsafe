@@ -6,7 +6,10 @@ from bitmerchant.wallet import Wallet
 from blessings import Terminal
 term = Terminal()
 
-from failsafe.failsafe import generate, _validate_generate_values
+from failsafe.failsafe import (generate,
+                               _validate_generate_values,
+                               recover,
+                               )
 
 class TestValidateGenerateValues(unittest.TestCase):
     def test_negative_number_of_users(self):
@@ -163,3 +166,54 @@ class TestGenerate(unittest.TestCase):
         self.mock_generateKeys.assert_has_calls(
                 [mock.call(self.wallet, 0, 5, extra_data={}),
                  ])
+
+class TestRecover(unittest.TestCase):
+    def setUp(self):
+        self._print_patcher = mock.patch('failsafe.failsafe._print')
+        self.mock_print = self._print_patcher.start()
+
+        self._get_input_patcher = mock.patch('failsafe.failsafe._get_input')
+        self.mock_get_input = self._get_input_patcher.start()
+
+        self.Wallet_patcher = mock.patch('failsafe.failsafe.Wallet')
+        self.mock_Wallet = self.Wallet_patcher.start()
+
+        self.BitcoinToB58SecretSharer_patcher = mock.patch('failsafe.failsafe.BitcoinToB58SecretSharer')
+        self.mock_BitcoinToB58SecretSharer = self.BitcoinToB58SecretSharer_patcher.start()
+
+        self._generateKeys_patcher = mock.patch('failsafe.failsafe._generateKeys')
+        self.mock_generateKeys = self._generateKeys_patcher.start()
+
+        self.mock_BitcoinToB58SecretSharer.recover_secret.return_value = 'master_key'
+
+        self.wallet = mock.MagicMock(Wallet)
+        self.mock_Wallet.deserialize.return_value = self.wallet
+
+    def tearDown(self):
+        self._print_patcher.stop()
+        self._get_input_patcher.stop()
+        self.Wallet_patcher.stop()
+        self.BitcoinToB58SecretSharer_patcher.stop()
+        self._generateKeys_patcher.stop()
+
+    def test_(self):
+        self.mock_get_input.side_effect = [3, 5, '', '2-shard1', '', '2-shard2']
+
+        expected = None
+        actual = recover()
+
+        self.assertEqual(expected, actual)
+        self.mock_get_input.assert_has_calls([
+            mock.call("Enter the index of the user who's key should be regenerated: ", input_type=int),
+            mock.call('Enter number of accounts to be created per user [1]: ', input_type=int, default=1),
+            mock.call('Press enter to continue'),
+            mock.call('Enter first shard: '),
+            mock.call('Press enter to continue'),
+            mock.call('Enter shard: '),
+            ])
+
+        self.mock_BitcoinToB58SecretSharer.recover_secret.assert_called_once_with(['shard1', 'shard2'])
+        self.mock_Wallet.deserialize.assert_called_once_with('master_key')
+        self.mock_generateKeys.assert_called_once_with(self.wallet,
+                                                       2,
+                                                       5)
