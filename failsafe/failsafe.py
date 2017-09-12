@@ -14,6 +14,19 @@ from .utils import _get_input, _print
 
 term = Terminal()
 
+def _validate_generate_values(number_of_users,
+                              number_of_accounts,
+                              key_threshold,
+                              extra_entropy):
+    if number_of_users < 1:
+        raise ValueError('Number of users must be greater than 1')
+
+    if number_of_accounts < 1:
+        raise ValueError('Number of accounts must be greater than 1')
+
+    if key_threshold < 1 or key_threshold > number_of_users:
+        raise ValueError('Key threshold must be greater than 1 and less than or equal to the number of users participating')
+
 def generate(number_of_users=None,
              number_of_accounts=None,
              key_threshold=None,
@@ -24,13 +37,18 @@ def generate(number_of_users=None,
         number_of_users = _get_input('Enter number of users participating [1]: ', input_type=int, default=1)
 
     if number_of_users > 1 and not key_threshold:
-        key_threshold = _get_input('Enter key threshold [1, {}]: '.format(number_of_users), input_type=int, default=number_of_users)
+        key_threshold = _get_input('Enter key threshold [Default: 1 Min: 1 Max: {}]: '.format(number_of_users), input_type=int, default=number_of_users)
 
     if number_of_accounts is None:
         number_of_accounts = _get_input('Enter number of accounts to be created per user [1]: ', input_type=int, default=1)
 
     if not extra_entropy:
         extra_entropy = _get_input('Enter additional entropy [None]: ')
+
+    _validate_generate_values(number_of_users,
+                              number_of_accounts,
+                              key_threshold,
+                              extra_entropy)
 
     master_wallet = Wallet.new_random_wallet(extra_entropy)
     serialized_wallet = master_wallet.serialize_b58()
