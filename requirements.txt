@@ -4,3 +4,4 @@ blessings
 versioneer
 docopt
 qrcode-terminal
+cryptography

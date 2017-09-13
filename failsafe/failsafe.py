@@ -4,15 +4,23 @@ import json
 import shutil
 import qrcode
 import qrcode_terminal
+import base64
+
+from cryptography.fernet import Fernet
+from cryptography.hazmat.backends import default_backend
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 
 from secretsharing import BitcoinToB58SecretSharer
 
 from blessings import Terminal
 from bitmerchant.wallet import Wallet
 
-from .utils import _get_input, _print
+from .utils import _get_input, _print, word_generator
 
+PASSPHRASE_WORD_LENGTH = 8
 term = Terminal()
+word_gen = word_generator()
 
 def _validate_generate_values(number_of_users,
                               number_of_accounts,
@@ -149,15 +157,29 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
 
         data['wif_accounts'].append(child.export_to_wif())
 
+    if 'master_shard' in data:
+        shard = data['master_shard']
+        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
+                         length=32,
+                         salt='',
+                         iterations=100000,
+                         backend=default_backend())
+        words = [word_gen.next() for x in range(PASSPHRASE_WORD_LENGTH)]
+        passphrase = ' '.join(words)
+        key = base64.urlsafe_b64encode(kdf.derive(passphrase))
+        f = Fernet(key)
+        token = f.encrypt(shard)
+
+        data['master_shard'] = token
+        data['passphrase'] = passphrase
+        shard_img = qrcode.make(data['master_shard'])
+        shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(user_index + 1))
+        shard_img.save(shard_img_filename)
+
     filename = os.path.join(directory, 'user_info.priv.json'.format(user_index + 1))
     json_data = json.dumps(data)
     with open(filename, 'w+b') as f:
         f.write(json_data)
-
-    if 'master_shard' in data:
-        shard_img = qrcode.make(data['master_shard'])
-        shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(user_index + 1))
-        shard_img.save(shard_img_filename)
 
     _print(('Key for user {user_index}:\n'
             'Data has been written to {filename}\n'
@@ -174,6 +196,12 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
            'and potentially compromise the other linked accounts',
            formatters=[term.red, term.bold])
     _print()
+
+    if 'master_shard' in data and 'passphrase' in data:
+        _print(('Passphrase: {passphrase}\n\n'
+                'Shard: {shard}').format(passphrase=data['passphrase'],
+                                         shard=data['master_shard']))
+        _print()
 
     if first:
         _print('Your first account address is being displayed here for your convenience')
