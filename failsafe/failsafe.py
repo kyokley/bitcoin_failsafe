@@ -115,7 +115,7 @@ def recover():
         shards.append(shard)
 
         if initial_threshold != int(threshold):
-            raise Exception('Shard thresholds do not match. An invalid shard has been provided.')
+            raise ValueError('Shard thresholds do not match. An invalid shard has been provided.')
 
     master_key = BitcoinToB58SecretSharer.recover_secret(shards)
     master_wallet = Wallet.deserialize(master_key)

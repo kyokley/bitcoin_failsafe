@@ -212,8 +212,57 @@ class TestRecover(unittest.TestCase):
             mock.call('Enter shard: '),
             ])
 
+        self.mock_print.assert_has_calls([
+            mock.call(term.clear),
+            mock.call('Starting on the next screen, each user will be asked to input their piece of the master key.'),
+            mock.call(term.clear),
+            mock.call('Attempting to recover keys for user 3'),
+            mock.call('Key progress: 0'),
+            mock.call(),
+            mock.call(term.clear),
+            mock.call('The next screen is for the next user.'),
+            mock.call(term.clear),
+            mock.call('Attempting to recover keys for user 3'),
+            mock.call('Key progress: 1'),
+            mock.call(),
+            ])
+
         self.mock_BitcoinToB58SecretSharer.recover_secret.assert_called_once_with(['shard1', 'shard2'])
         self.mock_Wallet.deserialize.assert_called_once_with('master_key')
         self.mock_generateKeys.assert_called_once_with(self.wallet,
                                                        2,
                                                        5)
+
+    def test_thresholds_do_not_match(self):
+        self.mock_get_input.side_effect = [3, 5, '', '2-shard1', '', '3-shard2']
+
+        self.assertRaises(ValueError,
+                          recover)
+
+        self.mock_get_input.assert_has_calls([
+            mock.call("Enter the index of the user who's key should be regenerated: ", input_type=int),
+            mock.call('Enter number of accounts to be created per user [1]: ', input_type=int, default=1),
+            mock.call('Press enter to continue'),
+            mock.call('Enter first shard: '),
+            mock.call('Press enter to continue'),
+            mock.call('Enter shard: '),
+            ])
+
+        self.mock_print.assert_has_calls([
+            mock.call(term.clear),
+            mock.call('Starting on the next screen, each user will be asked to input their piece of the master key.'),
+            mock.call(term.clear),
+            mock.call('Attempting to recover keys for user 3'),
+            mock.call('Key progress: 0'),
+            mock.call(),
+            mock.call(term.clear),
+            mock.call('The next screen is for the next user.'),
+            mock.call(term.clear),
+            mock.call('Attempting to recover keys for user 3'),
+            mock.call('Key progress: 1'),
+            mock.call(),
+            ])
+
+        self.assertFalse(self.mock_BitcoinToB58SecretSharer.recover_secret.called)
+        self.assertFalse(self.mock_Wallet.deserialize.called)
+        self.assertFalse(self.mock_generateKeys.called)
