@@ -7,7 +7,7 @@ import qrcode_terminal
 import base64
 import base58
 
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -58,7 +58,7 @@ def generate(number_of_users=None,
                               number_of_accounts,
                               key_threshold,
                               extra_entropy)
-    _print('The system will now attempt to generate a master key and split it amongst the users'
+    _print('The system will now attempt to generate a master key and split it amongst the users\n'
            'This process may take awhile...')
 
     master_wallet = Wallet.new_random_wallet(extra_entropy)
@@ -100,9 +100,6 @@ def recover():
                                     default=1)
     _print(term.clear)
 
-    _print('Starting on the next screen, each user will be asked to input their piece of the master key.')
-    _get_input('Press enter to continue')
-
     key_progress = 0
     finished = False
 
@@ -127,7 +124,7 @@ def recover():
                 if i == 0:
                     salt = _get_input('Salt: ').strip()
                 else:
-                    words.append(_get_input('Enter word #{}: '.format(key_progress)).strip())
+                    words.append(_get_input('Enter word #{}: '.format(i), secure=True).strip())
 
             kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
                              length=32,
@@ -139,7 +136,7 @@ def recover():
             f = Fernet(key)
             try:
                 piece = f.decrypt(base58.b58decode(piece))
-            except Fernet.InvalidToken:
+            except InvalidToken:
                 _print('Failed to decrypt shard. Try Again.', formatters=term.red)
                 continue
             done = True
