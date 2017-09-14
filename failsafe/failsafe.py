@@ -5,6 +5,7 @@ import shutil
 import qrcode
 import qrcode_terminal
 import base64
+import base58
 
 from cryptography.fernet import Fernet
 from cryptography.hazmat.backends import default_backend
@@ -57,6 +58,8 @@ def generate(number_of_users=None,
                               number_of_accounts,
                               key_threshold,
                               extra_entropy)
+    _print('The system will now attempt to generate a master key and split it amongst the users'
+           'This process may take awhile...')
 
     master_wallet = Wallet.new_random_wallet(extra_entropy)
     serialized_wallet = master_wallet.serialize_b58()
@@ -100,30 +103,67 @@ def recover():
     _print('Starting on the next screen, each user will be asked to input their piece of the master key.')
     _get_input('Press enter to continue')
 
-    _print(term.clear)
-    _print('Attempting to recover keys for user {}'.format(user_index + 1))
-    _print('Key progress: 0')
-    _print()
-    piece = _get_input('Enter first shard: ')
-    initial_threshold, shard = piece.split('-', 1)
-    initial_threshold = int(initial_threshold)
-    shards.append(shard)
+    key_progress = 0
+    finished = False
 
-    for i in range(1, initial_threshold):
+    while not finished:
         _print(term.clear)
-        _print('The next screen is for the next user.')
+        if key_progress == 0:
+            _print('Starting on the next screen, each user will be asked to input their piece of the master key.')
+        else:
+            _print('The next screen is for the next user.')
         _get_input('Press enter to continue')
 
         _print(term.clear)
         _print('Attempting to recover keys for user {}'.format(user_index + 1))
-        _print('Key progress: {}'.format(i))
+        _print('Key progress: {}'.format(key_progress))
         _print()
-        piece = _get_input('Enter shard: ')
+        piece = _get_input('Enter encrypted shard: ').strip()
+
+        done = False
+        while not done:
+            words = []
+            for i in range(PASSPHRASE_WORD_LENGTH + 1):
+                if i == 0:
+                    salt = _get_input('Salt: ').strip()
+                else:
+                    words.append(_get_input('Enter word #{}: '.format(key_progress)).strip())
+
+            kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
+                             length=32,
+                             salt=salt,
+                             iterations=100000,
+                             backend=default_backend())
+            passphrase = ' '.join(words)
+            key = base64.urlsafe_b64encode(kdf.derive(passphrase))
+            f = Fernet(key)
+            try:
+                piece = f.decrypt(base58.b58decode(piece))
+            except Fernet.InvalidToken:
+                _print('Failed to decrypt shard. Try Again.', formatters=term.red)
+                continue
+            done = True
+
         threshold, shard = piece.split('-', 1)
         shards.append(shard)
 
-        if initial_threshold != int(threshold):
-            raise ValueError('Shard thresholds do not match. An invalid shard has been provided.')
+        if key_progress == 0:
+            initial_threshold = threshold
+        else:
+            if initial_threshold != int(threshold):
+                raise ValueError('Shard thresholds do not match. An invalid shard has been provided.')
+
+        _print()
+        _print('Shard has been accepted', formatters=term.blue)
+        _get_input('Press enter to continue ')
+
+        if key_progress == threshold:
+            finished = True
+
+        key_progress += 1
+
+    _print('The next screen is meant for user {}'.format(user_index + 1), formatters=term.clear)
+    _get_input('Press enter to continue ')
 
     master_key = BitcoinToB58SecretSharer.recover_secret(shards)
     master_wallet = Wallet.deserialize(master_key)
@@ -158,10 +198,11 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
         data['wif_accounts'].append(child.export_to_wif())
 
     if 'master_shard' in data:
-        shard = data['master_shard']
+        salt = word_gen.next()
+        shard = data.pop('master_shard')
         kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
                          length=32,
-                         salt='',
+                         salt=salt,
                          iterations=100000,
                          backend=default_backend())
         words = [word_gen.next() for x in range(PASSPHRASE_WORD_LENGTH)]
@@ -170,9 +211,10 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
         f = Fernet(key)
         token = f.encrypt(shard)
 
-        data['master_shard'] = token
+        data['encrypted_shard'] = base58.b58encode(token)
         data['passphrase'] = passphrase
-        shard_img = qrcode.make(data['master_shard'])
+        data['salt'] = salt
+        shard_img = qrcode.make(data['encrypted_shard'])
         shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(user_index + 1))
         shard_img.save(shard_img_filename)
 

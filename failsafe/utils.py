@@ -1,5 +1,7 @@
 from __future__ import print_function
 
+import getpass
+
 from random import SystemRandom
 from .words import wordlist
 from blessings import Terminal
@@ -9,7 +11,7 @@ SENTINEL = object()
 
 sys_random = SystemRandom()
 
-def _get_input(prompt, input_type=SENTINEL, default=SENTINEL):
+def _get_input(prompt, input_type=SENTINEL, default=SENTINEL, secure=False):
     if input_type != SENTINEL and not isinstance(input_type, type):
         raise ValueError('Input type must be of type "type"')
     if (input_type != SENTINEL and
@@ -23,7 +25,12 @@ def _get_input(prompt, input_type=SENTINEL, default=SENTINEL):
     if input_type == SENTINEL:
         input_type = lambda x: x
 
-    return input_type(raw_input(prompt) or default)
+    if secure:
+        input_func = getpass.getpass
+    else:
+        input_func = raw_input
+
+    return input_type(input_func(prompt) or default)
 
 def _print(*args, **kwargs):
     formatters = kwargs.pop('formatters', None)
