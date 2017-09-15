@@ -5,7 +5,6 @@ import shutil
 import qrcode
 import qrcode_terminal
 import base64
-import base58
 
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.backends import default_backend
@@ -20,6 +19,7 @@ from bitmerchant.wallet import Wallet
 from .utils import _get_input, _print, word_generator
 
 PASSPHRASE_WORD_LENGTH = 8
+SALT_LENGTH = 32
 term = Terminal()
 word_gen = word_generator()
 
@@ -115,37 +115,14 @@ def recover():
         _print('Attempting to recover keys for user {}'.format(user_index + 1))
         _print('Key progress: {}'.format(key_progress))
         _print()
-        piece = _get_input('Enter encrypted shard: ').strip()
 
-        done = False
-        while not done:
-            words = []
-            for i in range(PASSPHRASE_WORD_LENGTH + 1):
-                if i == 0:
-                    salt = _get_input('Salt: ').strip()
-                else:
-                    words.append(_get_input('Enter word #{}: '.format(i), secure=True).strip())
-
-            kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
-                             length=32,
-                             salt=salt,
-                             iterations=100000,
-                             backend=default_backend())
-            passphrase = ' '.join(words)
-            key = base64.urlsafe_b64encode(kdf.derive(passphrase))
-            f = Fernet(key)
-            try:
-                piece = f.decrypt(base58.b58decode(piece))
-            except InvalidToken:
-                _print('Failed to decrypt shard. Try Again.', formatters=term.red)
-                continue
-            done = True
+        piece = decrypt_shard()
 
         threshold, shard = piece.split('-', 1)
         shards.append(shard)
 
         if key_progress == 0:
-            initial_threshold = threshold
+            initial_threshold = int(threshold)
         else:
             if initial_threshold != int(threshold):
                 raise ValueError('Shard thresholds do not match. An invalid shard has been provided.')
@@ -154,10 +131,10 @@ def recover():
         _print('Shard has been accepted', formatters=term.blue)
         _get_input('Press enter to continue ')
 
-        if key_progress == threshold:
-            finished = True
-
         key_progress += 1
+
+        if key_progress == int(threshold):
+            finished = True
 
     _print('The next screen is meant for user {}'.format(user_index + 1), formatters=term.clear)
     _get_input('Press enter to continue ')
@@ -195,7 +172,7 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
         data['wif_accounts'].append(child.export_to_wif())
 
     if 'master_shard' in data:
-        salt = word_gen.next()
+        salt = os.urandom(SALT_LENGTH)
         shard = data.pop('master_shard')
         kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
                          length=32,
@@ -208,9 +185,9 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
         f = Fernet(key)
         token = f.encrypt(shard)
 
-        data['encrypted_shard'] = base58.b58encode(token)
+        data['encrypted_shard'] = '{}${}'.format(base64.urlsafe_b64encode(salt),
+                                                 base64.urlsafe_b64encode(token))
         data['passphrase'] = passphrase
-        data['salt'] = salt
         shard_img = qrcode.make(data['encrypted_shard'])
         shard_img_filename = os.path.join(directory, 'child{}_shard.png'.format(user_index + 1))
         shard_img.save(shard_img_filename)
@@ -236,12 +213,6 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
            formatters=[term.red, term.bold])
     _print()
 
-    if 'master_shard' in data and 'passphrase' in data:
-        _print(('Passphrase: {passphrase}\n\n'
-                'Shard: {shard}').format(passphrase=data['passphrase'],
-                                         shard=data['master_shard']))
-        _print()
-
     if first:
         _print('Your first account address is being displayed here for your convenience')
         _print()
@@ -254,3 +225,31 @@ def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None
 
     shutil.rmtree(directory)
     _print(term.clear)
+
+def decrypt_shard():
+    encoded_salt, encrypted_shard = _get_input('Enter encrypted shard: ').strip().split('$')
+    salt = base64.urlsafe_b64decode(encoded_salt)
+
+    _print()
+    done = False
+    while not done:
+        words = []
+        for i in range(1, PASSPHRASE_WORD_LENGTH + 1):
+            words.append(_get_input('Enter word #{}: '.format(i), secure=True).strip())
+
+        kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
+                         length=32,
+                         salt=salt,
+                         iterations=100000,
+                         backend=default_backend())
+        passphrase = ' '.join(words)
+        key = base64.urlsafe_b64encode(kdf.derive(passphrase))
+        f = Fernet(key)
+        try:
+            decrypted_shard = f.decrypt(base64.urlsafe_b64decode(encrypted_shard))
+        except InvalidToken:
+            _print('Failed to decrypt shard. Try Again.', formatters=term.red)
+            _print()
+            continue
+        done = True
+    return decrypted_shard
