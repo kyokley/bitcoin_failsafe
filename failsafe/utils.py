@@ -30,7 +30,7 @@ def _get_input(prompt, input_type=SENTINEL, default=SENTINEL, secure=False):
     else:
         input_func = raw_input
 
-    return input_type(input_func(prompt) or default)
+    return input_type(input_func(prompt + ' ') or default)
 
 def _print(*args, **kwargs):
     formatters = kwargs.pop('formatters', None)

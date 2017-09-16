@@ -18,7 +18,7 @@ class TestGetInput(unittest.TestCase):
         expected = ''
         actual = _get_input('prompt')
         self.assertEqual(expected, actual)
-        self.mock_raw_input.assert_called_once_with('prompt')
+        self.mock_raw_input.assert_called_once_with('prompt ')
 
     def test_input_provided(self):
         self.mock_raw_input.return_value = 'test input'
@@ -26,7 +26,7 @@ class TestGetInput(unittest.TestCase):
         expected = 'test input'
         actual = _get_input('prompt')
         self.assertEqual(expected, actual)
-        self.mock_raw_input.assert_called_once_with('prompt')
+        self.mock_raw_input.assert_called_once_with('prompt ')
 
     def test_default(self):
         self.mock_raw_input.return_value = ''
@@ -34,7 +34,7 @@ class TestGetInput(unittest.TestCase):
         expected = 'test val'
         actual = _get_input('prompt', default='test val')
         self.assertEqual(expected, actual)
-        self.mock_raw_input.assert_called_once_with('prompt')
+        self.mock_raw_input.assert_called_once_with('prompt ')
 
     def test_input_type_no_default(self):
         self.mock_raw_input.return_value = '123'
@@ -42,7 +42,7 @@ class TestGetInput(unittest.TestCase):
         expected = 123
         actual = _get_input('prompt', input_type=int)
         self.assertEqual(expected, actual)
-        self.mock_raw_input.assert_called_once_with('prompt')
+        self.mock_raw_input.assert_called_once_with('prompt ')
 
     def test_input_type_default(self):
         self.mock_raw_input.return_value = ''
@@ -50,7 +50,7 @@ class TestGetInput(unittest.TestCase):
         expected = 1
         actual = _get_input('prompt', input_type=int, default=1)
         self.assertEqual(expected, actual)
-        self.mock_raw_input.assert_called_once_with('prompt')
+        self.mock_raw_input.assert_called_once_with('prompt ')
 
     def test_input_type_does_not_match_default(self):
         self.mock_raw_input.return_value = ''

@@ -111,6 +111,8 @@ class TestGenerate(unittest.TestCase):
 
         self.mock_print.assert_has_calls(
                 [mock.call(term.clear),
+                 mock.call('The system will now attempt to generate a master key and split it amongst the users\n'
+                           'This process may take awhile...'),
                  mock.call('The following screen is meant for user 1 (of 3)\n'
                            'Do not press continue if you are not user 1',
                            formatters=[term.clear, term.red]),
@@ -156,6 +158,8 @@ class TestGenerate(unittest.TestCase):
 
         self.mock_print.assert_has_calls(
                 [mock.call(term.clear),
+                 mock.call('The system will now attempt to generate a master key and split it amongst the users\n'
+                           'This process may take awhile...'),
                  mock.call('The following screen is meant for user 1 (of 1)\n'
                            'Do not press continue if you are not user 1',
                            formatters=[term.clear, term.red]),
@@ -175,6 +179,9 @@ class TestRecover(unittest.TestCase):
         self._get_input_patcher = mock.patch('failsafe.failsafe._get_input')
         self.mock_get_input = self._get_input_patcher.start()
 
+        self.decrypt_shard_patcher = mock.patch('failsafe.failsafe.decrypt_shard')
+        self.mock_decrypt_shard = self.decrypt_shard_patcher.start()
+
         self.Wallet_patcher = mock.patch('failsafe.failsafe.Wallet')
         self.mock_Wallet = self.Wallet_patcher.start()
 
@@ -186,18 +193,27 @@ class TestRecover(unittest.TestCase):
 
         self.mock_BitcoinToB58SecretSharer.recover_secret.return_value = 'master_key'
 
+        self.mock_decrypt_shard.side_effect = ['2-shard1', '2-shard2']
         self.wallet = mock.MagicMock(Wallet)
         self.mock_Wallet.deserialize.return_value = self.wallet
 
     def tearDown(self):
         self._print_patcher.stop()
         self._get_input_patcher.stop()
+        self.decrypt_shard_patcher.stop()
         self.Wallet_patcher.stop()
         self.BitcoinToB58SecretSharer_patcher.stop()
         self._generateKeys_patcher.stop()
 
     def test_(self):
-        self.mock_get_input.side_effect = [3, 5, '', '2-shard1', '', '2-shard2']
+        self.mock_get_input.side_effect = [3,
+                                           5,
+                                           '',
+                                           '',
+                                           '',
+                                           '',
+                                           '',
+                                           ]
 
         expected = None
         actual = recover()
@@ -207,24 +223,31 @@ class TestRecover(unittest.TestCase):
             mock.call("Enter the index of the user who's key should be regenerated: ", input_type=int),
             mock.call('Enter number of accounts to be created per user [1]: ', input_type=int, default=1),
             mock.call('Press enter to continue'),
-            mock.call('Enter first shard: '),
             mock.call('Press enter to continue'),
-            mock.call('Enter shard: '),
+            mock.call('Press enter to continue'),
+            mock.call('Press enter to continue'),
+            mock.call('Press enter to continue'),
             ])
 
         self.mock_print.assert_has_calls([
+            mock.call(term.clear),
             mock.call(term.clear),
             mock.call('Starting on the next screen, each user will be asked to input their piece of the master key.'),
             mock.call(term.clear),
             mock.call('Attempting to recover keys for user 3'),
             mock.call('Key progress: 0'),
             mock.call(),
+            mock.call(),
+            mock.call('Shard has been accepted', formatters=term.blue),
             mock.call(term.clear),
             mock.call('The next screen is for the next user.'),
             mock.call(term.clear),
             mock.call('Attempting to recover keys for user 3'),
             mock.call('Key progress: 1'),
             mock.call(),
+            mock.call(),
+            mock.call('Shard has been accepted', formatters=term.blue),
+            mock.call('The next screen is meant for user 3', formatters=term.clear),
             ])
 
         self.mock_BitcoinToB58SecretSharer.recover_secret.assert_called_once_with(['shard1', 'shard2'])
@@ -232,9 +255,18 @@ class TestRecover(unittest.TestCase):
         self.mock_generateKeys.assert_called_once_with(self.wallet,
                                                        2,
                                                        5)
+        self.mock_decrypt_shard.assert_has_calls([mock.call(), mock.call()])
+
 
     def test_thresholds_do_not_match(self):
-        self.mock_get_input.side_effect = [3, 5, '', '2-shard1', '', '3-shard2']
+        self.mock_get_input.side_effect = [3,
+                                           5,
+                                           '',
+                                           '',
+                                           '',
+                                           '',
+                                           ]
+        self.mock_decrypt_shard.side_effect = ['2-shard1', '3-shard2']
 
         self.assertRaises(ValueError,
                           recover)
@@ -243,18 +275,19 @@ class TestRecover(unittest.TestCase):
             mock.call("Enter the index of the user who's key should be regenerated: ", input_type=int),
             mock.call('Enter number of accounts to be created per user [1]: ', input_type=int, default=1),
             mock.call('Press enter to continue'),
-            mock.call('Enter first shard: '),
             mock.call('Press enter to continue'),
-            mock.call('Enter shard: '),
             ])
 
         self.mock_print.assert_has_calls([
+            mock.call(term.clear),
             mock.call(term.clear),
             mock.call('Starting on the next screen, each user will be asked to input their piece of the master key.'),
             mock.call(term.clear),
             mock.call('Attempting to recover keys for user 3'),
             mock.call('Key progress: 0'),
             mock.call(),
+            mock.call(),
+            mock.call('Shard has been accepted', formatters=term.blue),
             mock.call(term.clear),
             mock.call('The next screen is for the next user.'),
             mock.call(term.clear),
@@ -266,3 +299,4 @@ class TestRecover(unittest.TestCase):
         self.assertFalse(self.mock_BitcoinToB58SecretSharer.recover_secret.called)
         self.assertFalse(self.mock_Wallet.deserialize.called)
         self.assertFalse(self.mock_generateKeys.called)
+        self.mock_decrypt_shard.assert_has_calls([mock.call(), mock.call()])

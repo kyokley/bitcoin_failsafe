@@ -129,7 +129,7 @@ def recover():
 
         _print()
         _print('Shard has been accepted', formatters=term.blue)
-        _get_input('Press enter to continue ')
+        _get_input('Press enter to continue')
 
         key_progress += 1
 
@@ -137,7 +137,7 @@ def recover():
             finished = True
 
     _print('The next screen is meant for user {}'.format(user_index + 1), formatters=term.clear)
-    _get_input('Press enter to continue ')
+    _get_input('Press enter to continue')
 
     master_key = BitcoinToB58SecretSharer.recover_secret(shards)
     master_wallet = Wallet.deserialize(master_key)
