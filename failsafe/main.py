@@ -38,6 +38,10 @@ def main():
                      number_of_users=int(arguments['USERS']) if arguments['USERS'] else None)
         else:
             recover()
+    except ValueError, e:
+        print(term.red)
+        print(e)
+        print(term.normal)
     except KeyboardInterrupt:
         print(term.red)
         print('Aborted')

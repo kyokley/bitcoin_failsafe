@@ -34,7 +34,7 @@ def _validate_generate_values(number_of_users,
         raise ValueError('Number of accounts must be greater than 1')
 
     if key_threshold < 1 or key_threshold > number_of_users:
-        raise ValueError('Key threshold must be greater than 1 and less than or equal to the number of users participating')
+        raise ValueError('Key threshold must be greater than or equal to 2 and less than or equal to the number of users participating')
 
 def generate(number_of_users=None,
              number_of_accounts=None,
@@ -46,7 +46,7 @@ def generate(number_of_users=None,
         number_of_users = _get_input('Enter number of users participating [1]: ', input_type=int, default=1)
 
     if number_of_users > 1 and not key_threshold:
-        key_threshold = _get_input('Enter key threshold [Default: 1 Min: 1 Max: {}]: '.format(number_of_users), input_type=int, default=number_of_users)
+        key_threshold = _get_input('Enter key threshold [2]: ', input_type=int, default=2)
 
     if number_of_accounts is None:
         number_of_accounts = _get_input('Enter number of accounts to be created per user [1]: ', input_type=int, default=1)
@@ -146,30 +146,34 @@ def recover():
 
 def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None):
     directory = tempfile.mkdtemp()
-    user_key = master_wallet.get_child(user_index, is_prime=True)
+    user_key = master_wallet.get_child(user_index, is_prime=True) # m/user_index'
 
     data = {'user_key': user_key.serialize_b58(),
-            'wif_accounts': [],
+            'accounts': [],
             }
     if extra_data:
         data.update(extra_data)
 
     first = None
     for idx in range(number_of_accounts):
-        child = user_key.get_child(idx, is_prime=True)
+        account_entry = {}
+        child = user_key.get_child(0).get_child(idx) # m/user_index'/0/idx BIP32 compliant external accounts
 
         if idx == 0:
             first = child
 
-        img = qrcode.make(child.export_to_wif())
+        account_entry['wif'] = child.export_to_wif()
+        account_entry['address'] = child.to_address()
+
+        img = qrcode.make(account_entry['wif'])
         qr_filename = os.path.join(directory, 'child{}.priv.png'.format(idx + 1))
         img.save(qr_filename)
 
-        img = qrcode.make(child.to_address())
+        img = qrcode.make(account_entry['address'])
         qr_filename = os.path.join(directory, 'child{}.pub.png'.format(idx + 1))
         img.save(qr_filename)
 
-        data['wif_accounts'].append(child.export_to_wif())
+        data['accounts'].append(account_entry)
 
     if 'master_shard' in data:
         salt = os.urandom(SALT_LENGTH)
