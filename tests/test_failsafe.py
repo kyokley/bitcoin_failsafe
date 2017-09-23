@@ -93,7 +93,7 @@ class TestGenerate(unittest.TestCase):
         self.assertEqual(expected, actual)
         self.mock_get_input.assert_has_calls(
                 [mock.call('Enter number of users participating [1]: ', input_type=int, default=1),
-                    mock.call('Enter key threshold [Default: 1 Min: 1 Max: 3]: ', input_type=int, default=3),
+                    mock.call('Enter key threshold [2]: ', input_type=int, default=2),
                  mock.call('Enter number of accounts to be created per user [1]: ', input_type=int, default=1),
                  mock.call('Enter additional entropy [None]: '),
                  mock.call('Press enter to continue when ready'),
