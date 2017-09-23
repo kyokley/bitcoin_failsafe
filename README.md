@@ -42,8 +42,12 @@ In each user's directory, there are multiple files. These include ".png" files a
 ```
 {
   "child": "1 of 3",
-  "wif_accounts": [
-    "secretsecretsecret...",
+  "accounts": [
+    {
+      "wif": "secretsecret...",
+      "address": "publicpublic..."
+    },
+    ...
   ],
   "user_key": "xprv...",
   "encrypted_shard": "encryptedsecret...",
@@ -59,7 +63,9 @@ The "user_key" section contains a serialized version of the user's key in base58
 
 "encrypted_shard" contains the encrypted version of the shard using "passphrase" as the key. Encryption is done using cryptography's Fernet symmetric key encryption. ![Implementation](https://cryptography.io/en/latest/fernet/#implementation)
 
-Since the shard contains sensitive information that could potentially compromise your account and everyone else's it is important to keep it safe. Because it is encrypted, it should be okay to store it on a machine that is connected to the internet. **However, this assumes the passphrase is not stored in the same location.** Because the passphrase consists of 8 english words, it can easily be written down on paper and stored in a safe.
+Keeping the shard and passphrase info on an air-gapped machine is smart. The downside is that if something happens to that machine, the shard info will be lost forever. Alternatively, because the shard is encrypted, it should be okay to store it on a machine that is connected to the internet (or multiple machines). **However, this assumes the passphrase is not stored in the same location.** Because the passphrase consists of 8 english words, it can easily be written down on paper and stored securely offline somewhere (like in a safe).
+
+Regardless of the storage method, remember that if a malicious actor can compromise enough shards, they will be able to access ALL accounts.
 
 ### Recovery
 Let's assume Bob has lost his private key. With the help of Alice and Carol, he can get it back. Running failsafe with the -r or --recover flag starts recovery in interactive mode.
