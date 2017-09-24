@@ -80,7 +80,7 @@ In this case, Bob's user index is 2.
 
 Next, failsafe begins asking for the shards from Alice and Carol. These can be provided in any order. Each user will be prompted for their encrypted shard followed by prompts for each of their words in the passphrase. Because of the sensitive nature of the passphrase, the words are not shown as they are typed. If decryption of the encrypted shard fails, the system will restart prompting for the words again.
 
-Once the key threshold has been achieved, Bob's private key will be regenerated and written to the filesystem. At this point, there is no way to regenerate Bob's piece of the master key but, hopefully, in future versions, this functionality will be added.
+Once the key threshold has been achieved, Bob's private key along with new encrypted shard and passphrase will be regenerated and written to the filesystem.
 
 ## Caveats
 Obviously, this creates new security concerns. I came up with this process for my family that I trust. If Bob did not trust Alice and Carol, he should not engage in this linked wallet. I provide no guarantees about the security or validity of these linked wallets. Use at your own risk.
