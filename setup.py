@@ -109,4 +109,5 @@ setup(
     cmdclass={
         'publish': PublishCommand,
     },
+    dependency_links=['https://github.com/kyokley/secret-sharing/tarball/master#egg=secretsharing-0.2.7'],
 )
