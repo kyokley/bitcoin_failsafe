@@ -192,6 +192,7 @@ class TestRecover(unittest.TestCase):
         self.mock_generateKeys = self._generateKeys_patcher.start()
 
         self.mock_BitcoinToB58SecretSharer.recover_secret.return_value = 'master_key'
+        self.mock_BitcoinToB58SecretSharer.recover_share.return_value = 'user_share'
 
         self.mock_decrypt_shard.side_effect = ['2-shard1', '2-shard2']
         self.wallet = mock.MagicMock(Wallet)
@@ -251,10 +252,13 @@ class TestRecover(unittest.TestCase):
             ])
 
         self.mock_BitcoinToB58SecretSharer.recover_secret.assert_called_once_with(['shard1', 'shard2'])
+        self.mock_BitcoinToB58SecretSharer.recover_share.assert_called_once_with(['shard1', 'shard2'], 3)
         self.mock_Wallet.deserialize.assert_called_once_with('master_key')
         self.mock_generateKeys.assert_called_once_with(self.wallet,
                                                        2,
-                                                       5)
+                                                       5,
+                                                       extra_data={'master_shard': '2-user_share',
+                                                                   'child': 'user 3'})
         self.mock_decrypt_shard.assert_has_calls([mock.call(), mock.call()])
 
 
