@@ -246,7 +246,12 @@ def decrypt_shard():
     while not done:
         words = []
         for i in range(1, PASSPHRASE_WORD_LENGTH + 1):
-            words.append(_get_input('Enter word #{}: '.format(i), secure=True).strip())
+            word = _get_input('Enter word #{}: '.format(i), secure=True).strip()
+
+            if not word:
+                break
+
+            words.append(word)
 
         kdf = PBKDF2HMAC(algorithm=hashes.SHA256(),
                          length=32,
