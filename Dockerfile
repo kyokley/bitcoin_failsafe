@@ -3,7 +3,6 @@
 #	docker build -t failsafe .
 #
 #	# Run the container and mount the local settings and your code
-#   # Your code must be under $HOME/Documents, you only need to change it here.
 #		docker run --rm -it \
 #			-v /tmp:/tmp \
 #			-e NEWUSER=$USER \
@@ -26,6 +25,7 @@ RUN apk add --no-cache \
 COPY . /app
 
 WORKDIR /app
+RUN pip install -r requirements.txt
 RUN pip install .
 RUN chmod a+x /app/run_docker.sh
 

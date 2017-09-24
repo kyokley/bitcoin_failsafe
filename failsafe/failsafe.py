@@ -120,11 +120,12 @@ def recover():
 
         threshold, shard = piece.split('-', 1)
         shards.append(shard)
+        threshold = int(threshold)
 
         if key_progress == 0:
-            initial_threshold = int(threshold)
+            initial_threshold = threshold
         else:
-            if initial_threshold != int(threshold):
+            if initial_threshold != threshold:
                 raise ValueError('Shard thresholds do not match. An invalid shard has been provided.')
 
         _print()
@@ -133,7 +134,7 @@ def recover():
 
         key_progress += 1
 
-        if key_progress == int(threshold):
+        if key_progress == threshold:
             finished = True
 
     _print('The next screen is meant for user {}'.format(user_index + 1), formatters=term.clear)
@@ -142,7 +143,13 @@ def recover():
     master_key = BitcoinToB58SecretSharer.recover_secret(shards)
     master_wallet = Wallet.deserialize(master_key)
 
-    _generateKeys(master_wallet, user_index, number_of_accounts)
+    user_share = BitcoinToB58SecretSharer.recover_share(shards, user_index + 1)
+
+    data = {'child': 'user {}'.format(user_index + 1),
+            'master_shard': '{}-{}'.format(threshold, user_share),
+            }
+
+    _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=data)
 
 def _generateKeys(master_wallet, user_index, number_of_accounts, extra_data=None):
     directory = tempfile.mkdtemp()
