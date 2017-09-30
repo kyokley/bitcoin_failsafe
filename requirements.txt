@@ -1,4 +1,4 @@
-secretsharing
+git+https://github.com/kyokley/secret-sharing.git
 bitmerchant
 blessings
 versioneer

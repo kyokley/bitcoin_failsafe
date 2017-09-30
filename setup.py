@@ -21,7 +21,7 @@ AUTHOR = 'Kevin Yokley'
 
 # What packages are required for this module to be executed?
 with open('requirements.txt') as f:
-    REQUIRED = [x.strip() for x in f.readlines()]
+    REQUIRED = [x.strip() for x in f.readlines() if '+http' not in x]
 
 # The rest you shouldn't have to touch too much :)
 # ------------------------------------------------
