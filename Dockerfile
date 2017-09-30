@@ -25,7 +25,8 @@ RUN apk add --no-cache \
 COPY . /app
 
 WORKDIR /app
-RUN pip install --process-dependency-links .
+RUN pip install -r /app/requirements.txt
+RUN pip install .
 RUN chmod a+x /app/run_docker.sh
 
 ENTRYPOINT ["/app/run_docker.sh"]
