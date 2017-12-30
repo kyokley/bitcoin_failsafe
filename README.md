@@ -65,7 +65,7 @@ Even though the additional accounts created by failsafe are a convienence and no
 
 In general, remember that the generated accounts correspond to just one account. The account referenced by the "user_key" is the user's HD wallet. The HD wallet is capable of seeing and spending bitcoins from any subsequent accounts it generates. Keep this in mind when determining the purpose of the various accounts.
 
-"encrypted_shard" contains the encrypted version of the shard using "passphrase" as the key. Encryption is done using cryptography's Fernet symmetric key encryption. ![Implementation](https://cryptography.io/en/latest/fernet/#implementation)
+"encrypted_shard" contains the encrypted version of the shard using "passphrase" as the key. Encryption is done using cryptography's Fernet symmetric key encryption. [Implementation](https://cryptography.io/en/latest/fernet/#implementation)
 
 Keeping the shard and passphrase info on an air-gapped machine is smart. The downside is that if something happens to that machine, the shard info will be lost forever. Alternatively, because the shard is encrypted, it should be okay to store it on a machine that is connected to the internet (or multiple machines). **However, this assumes the passphrase is not stored in the same location.** Because the passphrase consists of 8 english words, it can easily be written down on paper and stored securely offline somewhere (like in a safe).
 
